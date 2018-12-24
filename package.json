@@ -1,0 +1,19 @@
+{
+  "name": "react-trello-api",
+  "version": "0.0.1",
+  "description": "Api for react trello app",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js"
+  },
+  "author": "Alex Rybak",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "mongodb": "^2.2.16"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.9"
+  }
+}
