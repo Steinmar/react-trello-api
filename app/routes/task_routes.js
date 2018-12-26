@@ -3,13 +3,6 @@ const _ = require('lodash');
 const PREFIX_URL = '/board/:boardId/task';
 const COLLECTION_NAME = 'tasks';
 
-// boardId,
-// columnId
-// id
-// order // 0 means upper task in column
-// name,
-// description
-
 module.exports = function(app, db) {
   app.post(PREFIX_URL, (req, res) => {
     const { boardId } = req.params;
