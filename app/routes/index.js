@@ -1,5 +1,6 @@
 const authRoutes = require('./auth_routes');
 const boardRoutes = require('./board_routes');
+const columnRoutes = require('./column_routes');
 const { tokenGenerator } = require('../encryption/index');
 const { AUTH_CONSTANTS } = require('../CONSTANTS');
 
@@ -19,4 +20,5 @@ module.exports = function(app, db) {
   });
 
   boardRoutes(app, db);
+  columnRoutes(app, db);
 };
