@@ -14,13 +14,13 @@ module.exports = {
   },
   getValidUserByToken: function(token) {
     if (!token || token.length === 0) {
-      return false;
+      return null;
     }
     const emailSplitterPosition = token.indexOf(';');
     const tokenSplitterPosition = token.indexOf('#');
 
     if (emailSplitterPosition === -1 || tokenSplitterPosition === -1) {
-      return false;
+      return null;
     }
 
     const email = token.substring(0, emailSplitterPosition);
@@ -31,7 +31,7 @@ module.exports = {
     );
 
     if (emailHash !== currentHash) {
-      return false;
+      return null;
     }
 
     const hashDate = new Date(token.substring(tokenSplitterPosition + 1));
