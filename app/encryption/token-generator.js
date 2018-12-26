@@ -3,33 +3,39 @@ const TOKEN_TIME = 2 * 60 * 1000;
 
 module.exports = {
   generate: function(email) {
-    const emailHash = hashFunction(email);
+    const normalizedEmail = email.toLowerCase();
+    const emailHash = hashFunction(normalizedEmail);
     const stampEndDate = new Date();
 
     stampEndDate.setMilliseconds(TOKEN_TIME);
     const validityDateStamp = stampEndDate.toISOString();
 
-    return emailHash + '@' + validityDateStamp;
+    return normalizedEmail + ';' + emailHash + '#' + validityDateStamp;
   },
-  isValid: function(email, token) {
-    if (!email || email.length === 0 || !token || token.length === 0) {
+  getValidUserByToken: function(token) {
+    if (!token || token.length === 0) {
       return false;
     }
-    const splitterPosition = token.indexOf('@');
+    const emailSplitterPosition = token.indexOf(';');
+    const tokenSplitterPosition = token.indexOf('#');
 
-    if (splitterPosition === -1) {
+    if (emailSplitterPosition === -1 || tokenSplitterPosition === -1) {
       return false;
     }
 
+    const email = token.substring(0, emailSplitterPosition);
     const emailHash = hashFunction(email);
-    const currentHash = token.substring(0, splitterPosition);
+    const currentHash = token.substring(
+      emailSplitterPosition + 1,
+      tokenSplitterPosition
+    );
 
     if (emailHash !== currentHash) {
       return false;
     }
 
-    const hashDate = new Date(token.substring(splitterPosition + 1));
+    const hashDate = new Date(token.substring(tokenSplitterPosition + 1));
 
-    return new Date() < hashDate;
+    return new Date() < hashDate ? email : null;
   }
 };

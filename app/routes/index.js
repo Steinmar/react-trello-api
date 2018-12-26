@@ -1,15 +1,17 @@
 const authRoutes = require('./auth_routes');
 const boardRoutes = require('./board_routes');
 const { tokenGenerator } = require('../encryption/index');
+const { AUTH_CONSTANTS } = require('../CONSTANTS');
 
 module.exports = function(app, db) {
   authRoutes(app, db);
 
   app.all('*', function(req, res, next) {
-    const email = req.body.email.toLowerCase();
-    const authHeader = req.headers.authtoken;
-
-    if (tokenGenerator.isValid(email, authHeader)) {
+    if (
+      tokenGenerator.getValidUserByToken(
+        req.headers[AUTH_CONSTANTS.AUTH_HEADER_NAME]
+      )
+    ) {
       next();
     } else {
       res.send(401);
