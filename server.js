@@ -5,25 +5,8 @@ const app = express();
 const db = require('./config/db');
 const port = 8000;
 
-// MongoClient.connect(
-//   url,
-//   (err, db) => {
-//     if (err) {
-//       throw err;
-//     }
-//     const dbo = db.db(DB_NAME);
-//     console.log('Database created!');
-//     db.close();
-//   }
-// );
-
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// require('./app/routes')(app, {});
-
-// app.listen(port, () => {
-//   console.log('We are live on ' + port);
-// });
+app.use(bodyParser.json());
 
 MongoClient.connect(
   db.url,

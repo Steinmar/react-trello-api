@@ -2,6 +2,7 @@ const ObjectID = require('mongodb').ObjectID;
 const { tokenGenerator } = require('../encryption/index');
 const { AUTH_CONSTANTS } = require('../CONSTANTS');
 const PREFIX_URL = '/board';
+const COLLECTION_NAME = 'boards';
 
 module.exports = function(app, db) {
   app.post(PREFIX_URL, (req, res) => {
@@ -11,7 +12,7 @@ module.exports = function(app, db) {
       req.headers[AUTH_CONSTANTS.AUTH_HEADER_NAME]
     );
 
-    db.collection('boards').insert(
+    db.collection(COLLECTION_NAME).insert(
       { name: name, owner: email },
       (err, result) => {
         if (err) {
@@ -21,8 +22,6 @@ module.exports = function(app, db) {
         }
       }
     );
-
-    console.log(name);
   });
 
   app.get(PREFIX_URL + '/list', (req, res) => {
@@ -33,7 +32,7 @@ module.exports = function(app, db) {
       owner: { $eq: email }
     };
 
-    db.collection('boards')
+    db.collection(COLLECTION_NAME)
       .find(query)
       .toArray((err, result) => {
         if (err) {
@@ -47,7 +46,7 @@ module.exports = function(app, db) {
   app.get(PREFIX_URL + '/:id', (req, res) => {
     const details = { _id: new ObjectID(req.params.id) };
 
-    db.collection('boards').findOne(details, (err, result) => {
+    db.collection(COLLECTION_NAME).findOne(details, (err, result) => {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
@@ -64,10 +63,9 @@ module.exports = function(app, db) {
 
     const id = req.params.id;
     const details = { _id: new ObjectID(id) };
-    console.log(details);
     const board = { name: name, owner: email };
 
-    db.collection('boards').update(details, board, (err, result) => {
+    db.collection(COLLECTION_NAME).update(details, board, (err, result) => {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
@@ -79,7 +77,7 @@ module.exports = function(app, db) {
   app.delete(PREFIX_URL + '/:id', (req, res) => {
     const details = { _id: new ObjectID(req.params.id) };
 
-    db.collection('boards').remove(details, (err, result) => {
+    db.collection(COLLECTION_NAME).remove(details, (err, result) => {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
