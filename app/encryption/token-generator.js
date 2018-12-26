@@ -1,5 +1,5 @@
 const hashFunction = require('./hash');
-const TOKEN_TIME = 2 * 60 * 1000;
+const TOKEN_TIME = 10 * 60 * 1000;
 
 module.exports = {
   generate: function(email) {
