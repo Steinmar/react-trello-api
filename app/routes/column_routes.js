@@ -1,6 +1,4 @@
 const ObjectID = require('mongodb').ObjectID;
-const { tokenGenerator } = require('../encryption/index');
-const { AUTH_CONSTANTS } = require('../CONSTANTS');
 const _ = require('lodash');
 const PREFIX_URL = '/board/:boardId/column';
 const COLLECTION_NAME = 'columns';
