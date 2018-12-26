@@ -1,13 +1,18 @@
 const ObjectID = require('mongodb').ObjectID;
+const { tokenGenerator } = require('../encryption/index');
+const { AUTH_CONSTANTS } = require('../CONSTANTS');
 const PREFIX_URL = '/board';
 
 module.exports = function(app, db) {
   app.post(PREFIX_URL, (req, res) => {
     const name = req.body.name;
-    const email = req.body.email.toLowerCase();
+
+    const email = tokenGenerator.getValidUserByToken(
+      req.headers[AUTH_CONSTANTS.AUTH_HEADER_NAME]
+    );
 
     db.collection('boards').insert(
-      { name: name, user: email },
+      { name: name, owner: email },
       (err, result) => {
         if (err) {
           res.send({ error: 'An error has occurred' });
@@ -21,10 +26,11 @@ module.exports = function(app, db) {
   });
 
   app.get(PREFIX_URL + '/list', (req, res) => {
-    console.log(req.params);
-    const email = req.params.email.toLowerCase();
+    const email = tokenGenerator.getValidUserByToken(
+      req.headers[AUTH_CONSTANTS.AUTH_HEADER_NAME]
+    );
     const query = {
-      email: { $eq: email }
+      owner: { $eq: email }
     };
 
     db.collection('boards')
@@ -33,11 +39,9 @@ module.exports = function(app, db) {
         if (err) {
           res.send({ error: 'An error has occurred' });
         } else {
-          res.sendStatus(result);
+          res.send(result);
         }
       });
-
-    console.log(name);
   });
 
   app.get(PREFIX_URL + '/:id', (req, res) => {
