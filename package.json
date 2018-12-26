@@ -1,6 +1,6 @@
 {
   "name": "react-trello-api",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Api for react trello app",
   "main": "server.js",
   "scripts": {
