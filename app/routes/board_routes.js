@@ -17,7 +17,7 @@ module.exports = function(app, db) {
         if (err) {
           res.send({ error: 'An error has occurred' });
         } else {
-          res.sendStatus(201);
+          res.send(parseBoardItemFromDB(result.ops[0]));
         }
       }
     );
@@ -39,45 +39,45 @@ module.exports = function(app, db) {
         if (err) {
           res.send({ error: 'An error has occurred' });
         } else {
-          res.send(result);
+          res.send(result.map(parseBoardItemFromDB));
         }
       });
   });
 
   app.get(PREFIX_URL + '/:id', (req, res) => {
-    const id = req.params.id;
-    const details = { _id: new ObjectID(id) };
+    const details = { _id: new ObjectID(req.params.id) };
 
     db.collection('boards').findOne(details, (err, result) => {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
-        res.sendStatus(result);
+        res.send(parseBoardItemFromDB(result));
       }
     });
-
-    console.log(name);
   });
 
   app.put(PREFIX_URL + '/:id', (req, res) => {
     const name = req.body.name;
-    const email = req.body.email.toLowerCase();
+    const email = tokenGenerator.getValidUserByToken(
+      req.headers[AUTH_CONSTANTS.AUTH_HEADER_NAME]
+    );
 
     const id = req.params.id;
     const details = { _id: new ObjectID(id) };
-    const board = { name, email };
+    console.log(details);
+    const board = { name: name, owner: email };
 
     db.collection('boards').update(details, board, (err, result) => {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
-        res.sendStatus(201);
+        res.sendStatus(200);
       }
     });
   });
 
   app.delete(PREFIX_URL + '/:id', (req, res) => {
-    const details = { _id: new ObjectID(id) };
+    const details = { _id: new ObjectID(req.params.id) };
 
     db.collection('boards').remove(details, (err, result) => {
       if (err) {
@@ -86,7 +86,12 @@ module.exports = function(app, db) {
         res.sendStatus(201);
       }
     });
-
-    console.log(name);
   });
 };
+
+function parseBoardItemFromDB(item) {
+  return {
+    name: item.name,
+    id: item._id
+  };
+}
