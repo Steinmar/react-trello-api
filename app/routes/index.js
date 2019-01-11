@@ -8,7 +8,8 @@ const { AUTH_CONSTANTS } = require('../CONSTANTS');
 module.exports = function(app, db) {
   authRoutes(app, db);
 
-  app.all('*', function(req, res, next) {
+  app.all('/*', function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
     if (
       tokenGenerator.getValidUserByToken(
         req.headers[AUTH_CONSTANTS.AUTH_HEADER_NAME]

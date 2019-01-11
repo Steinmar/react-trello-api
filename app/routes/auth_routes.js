@@ -33,7 +33,7 @@ module.exports = function(app, db) {
             }
           });
         } else {
-          res.send(500);
+          res.status(500).send({ error: "Email isn't unique!" });
         }
       },
       error => {
@@ -63,7 +63,9 @@ module.exports = function(app, db) {
 
         res.send({ name, email });
       } else {
-        res.sendStatus(404);
+        res
+          .status(404)
+          .send({ error: 'User with this email and password was not found' });
       }
     });
   });

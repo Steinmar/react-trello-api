@@ -10,11 +10,13 @@
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
     "express": "^4.16.4",
     "lodash": "^4.17.11",
     "mongodb": "^2.2.16"
   },
   "devDependencies": {
-    "nodemon": "^1.18.9"
+    "nodemon": "^1.18.9",
+    "minimist": "*"
   }
 }
