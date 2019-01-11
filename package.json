@@ -17,7 +17,6 @@
   },
   "devDependencies": {
     "nodemon": "^1.18.9",
-    "swagger-node-express": "~2.0",
     "minimist": "*"
   }
 }
