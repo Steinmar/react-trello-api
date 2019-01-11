@@ -65,7 +65,7 @@ module.exports = function(app, db) {
       } else {
         res
           .status(404)
-          .send({ error: 'User with this email and password was not found' });
+          .send({ error: 'User with this login and password does not exist' });
       }
     });
   });
