@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const MongoClient = require('mongodb').MongoClient;
 const bodyParser = require('body-parser');
 const argv = require('minimist')(process.argv.slice(2));
@@ -10,6 +11,7 @@ const port = 8000;
 // swagger start
 
 const subpath = express();
+app.use(cors());
 app.use(bodyParser());
 app.use('/v1', subpath);
 swagger.setAppHandler(subpath);
