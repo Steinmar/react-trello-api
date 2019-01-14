@@ -80,7 +80,7 @@ module.exports = function(app, db) {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
-        res.sendStatus({ id: details._id });
+        res.send({ id: details._id });
       }
     });
   });
