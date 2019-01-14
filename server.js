@@ -10,7 +10,11 @@ const port = 8000;
 
 // swagger start
 
-app.use(cors());
+app.use(
+  cors({
+    exposedHeaders: 'authToken'
+  })
+);
 app.use(bodyParser());
 
 app.use(bodyParser.urlencoded({ extended: true }));
