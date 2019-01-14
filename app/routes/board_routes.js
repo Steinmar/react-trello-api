@@ -60,7 +60,6 @@ module.exports = function(app, db) {
     const email = tokenGenerator.getValidUserByToken(
       req.headers[AUTH_CONSTANTS.AUTH_HEADER_NAME]
     );
-
     const id = req.params.id;
     const details = { _id: new ObjectID(id) };
     const board = { name: name, owner: email };
@@ -69,7 +68,7 @@ module.exports = function(app, db) {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
-        res.sendStatus(board);
+        res.status(200).send(board);
       }
     });
   });
