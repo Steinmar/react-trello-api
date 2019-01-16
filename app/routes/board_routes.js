@@ -44,6 +44,7 @@ module.exports = function(app, db) {
   });
 
   app.get(PREFIX_URL + '/:id', (req, res) => {
+    // TODO add owner: { $eq: email } to request
     const details = { _id: new ObjectID(req.params.id) };
 
     db.collection(COLLECTION_NAME).findOne(details, (err, result) => {
