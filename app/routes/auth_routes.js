@@ -69,4 +69,8 @@ module.exports = function(app, db) {
       }
     });
   });
+
+  app.post('/logout', (req, res) => {
+    res.sendStatus(200);
+  });
 };
