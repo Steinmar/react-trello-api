@@ -44,10 +44,12 @@ module.exports = function(app, db) {
   });
 
   app.get(PREFIX_URL + '/:id', (req, res) => {
-    // TODO add owner: { $eq: email } to request
-    const details = { _id: new ObjectID(req.params.id) };
+    const email = tokenGenerator.getValidUserByToken(
+      req.headers[AUTH_CONSTANTS.AUTH_HEADER_NAME]
+    );
+    const query = { _id: new ObjectID(req.params.id), owner: { $eq: email } };
 
-    db.collection(COLLECTION_NAME).findOne(details, (err, result) => {
+    db.collection(COLLECTION_NAME).findOne(query, (err, result) => {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
@@ -62,10 +64,10 @@ module.exports = function(app, db) {
       req.headers[AUTH_CONSTANTS.AUTH_HEADER_NAME]
     );
     const id = req.params.id;
-    const details = { _id: new ObjectID(id) };
+    const query = { _id: new ObjectID(req.params.id), owner: { $eq: email } };
     const board = { name: name, owner: email };
 
-    db.collection(COLLECTION_NAME).update(details, board, (err, result) => {
+    db.collection(COLLECTION_NAME).update(query, board, (err, result) => {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
@@ -75,13 +77,16 @@ module.exports = function(app, db) {
   });
 
   app.delete(PREFIX_URL + '/:id', (req, res) => {
-    const details = { _id: new ObjectID(req.params.id) };
+    const email = tokenGenerator.getValidUserByToken(
+      req.headers[AUTH_CONSTANTS.AUTH_HEADER_NAME]
+    );
+    const query = { _id: new ObjectID(req.params.id), owner: { $eq: email } };
 
-    db.collection(COLLECTION_NAME).remove(details, (err, result) => {
+    db.collection(COLLECTION_NAME).remove(query, (err, result) => {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
-        res.send({ id: details._id });
+        res.send({ id: query._id });
       }
     });
   });
