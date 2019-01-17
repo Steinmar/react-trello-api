@@ -1,4 +1,5 @@
-const columnRoutes = require('./column_routes');
+// const columnRoutes = require('./column_routes');
+const _ = require('lodash');
 const ObjectID = require('mongodb').ObjectID;
 const { tokenGenerator } = require('../encryption/index');
 const { AUTH_CONSTANTS } = require('../CONSTANTS');
@@ -34,21 +35,19 @@ module.exports = function(app, db) {
     const columnsQuery = { boardId: req.params.id };
     // const data = { name, order, tasks, boardId };
 
-    db.collection(COLLECTION_NAME).findOne(query, (err, result) => {
+    db.collection(COLLECTION_NAME).findOne(query, (err, boardResult) => {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
         db.collection(COLUMNS_COLLECTION_NAME)
           .find(columnsQuery)
-          .toArray((err, result) => {
+          .toArray((err, columnsResult) => {
             if (err) {
               res.send({ error: 'An error has occurred' });
-            } else if (result) {
-              // res.send(parseColumnItemFromDB(result));
-              res.send({
-                boardId: columnsQuery.boardId,
-                columns: result
-              });
+            } else if (columnsResult) {
+              res.send(
+                parseDetailedBoardItemFromDB(boardResult, columnsResult)
+              );
             } else {
               res.sendStatus(404);
             }
@@ -130,4 +129,16 @@ function parseBoardItemFromDB(item) {
     name: item.name,
     id: item._id
   };
+}
+
+function parseDetailedBoardItemFromDB(board, columns) {
+  return {
+    id: board._id,
+    name: board.name,
+    columns: columns.map(parseColumnItemFromDB)
+  };
+}
+
+function parseColumnItemFromDB(item) {
+  return { id: item._id, ..._.omit(item, '_id') };
 }
