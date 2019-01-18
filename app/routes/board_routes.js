@@ -33,7 +33,6 @@ module.exports = function(app, db) {
     );
     const query = { _id: new ObjectID(req.params.id), owner: { $eq: email } };
     const columnsQuery = { boardId: req.params.id };
-    // const data = { name, order, tasks, boardId };
 
     db.collection(COLLECTION_NAME).findOne(query, (err, boardResult) => {
       if (err) {
@@ -45,7 +44,6 @@ module.exports = function(app, db) {
             if (err) {
               res.send({ error: 'An error has occurred' });
             } else if (columnsResult) {
-              console.log(columnsResult);
               res.send(
                 parseDetailedBoardItemFromDB(boardResult, columnsResult)
               );
