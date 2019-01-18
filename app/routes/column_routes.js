@@ -43,7 +43,10 @@ module.exports = function(app, db) {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
-        res.sendStatus(200);
+        res.send({
+          id,
+          ...data
+        });
       }
     });
   });
