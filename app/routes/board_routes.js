@@ -45,6 +45,7 @@ module.exports = function(app, db) {
             if (err) {
               res.send({ error: 'An error has occurred' });
             } else if (columnsResult) {
+              console.log(columnsResult);
               res.send(
                 parseDetailedBoardItemFromDB(boardResult, columnsResult)
               );
@@ -140,5 +141,6 @@ function parseDetailedBoardItemFromDB(board, columns) {
 }
 
 function parseColumnItemFromDB(item) {
+  console.log(item);
   return { id: item._id, ..._.omit(item, '_id') };
 }

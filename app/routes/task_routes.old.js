@@ -1,8 +1,7 @@
 const ObjectID = require('mongodb').ObjectID;
 const _ = require('lodash');
 const PREFIX_URL = '/board/:boardId/task';
-// const COLLECTION_NAME = 'tasks';
-const COLLECTION_NAME = 'columns';
+const COLLECTION_NAME = 'tasks';
 
 module.exports = function(app, db) {
   app.post(PREFIX_URL, (req, res) => {
@@ -10,35 +9,17 @@ module.exports = function(app, db) {
     const { name, order, columnId, description } = req.body;
     const data = { name, order, columnId, description, boardId };
 
-    findColumnDataById$(db, columnId).then(
-      columnData => {
-        const task = {
-          status: columnData.name,
-          ...data,
-          // use this for generating id for object that hasn't get id from mongo
-          _id: new ObjectID(new Date().getDate())
-        };
+    findColumnNameById$(db, columnId).then(
+      name => {
+        const task = { status: name, ...data };
 
-        const query = { _id: columnData._id };
-        columnData.tasks.push(task);
-
-        db.collection(COLLECTION_NAME).update(
-          query,
-          columnData,
-          { upsert: true },
-          (err, result) => {
-            if (err) {
-              res.send({ error: 'An error has occurred' });
-            } else {
-              console.log(result.result.ok);
-              if (result.result.ok === 1) {
-                res.send(columnData);
-              } else {
-                res.setStatus(404).send({});
-              }
-            }
+        db.collection(COLLECTION_NAME).insert(task, (err, result) => {
+          if (err) {
+            res.send({ error: 'An error has occurred' });
+          } else {
+            res.send(parseTaskItemFromDB(result.ops[0]));
           }
-        );
+        });
       },
       error => {
         res.send({
@@ -105,27 +86,13 @@ function parseTaskItemFromDB(item) {
 
 function findColumnNameById$(db, columnId) {
   const columnsQuery = { _id: new ObjectID(columnId) };
-
+  console.log(columnsQuery);
   return new Promise((success, error) => {
     db.collection('columns').findOne(columnsQuery, (err, result) => {
       if (err) {
         error({ error: 'An error has occurred' });
       } else {
         success(result.name);
-      }
-    });
-  });
-}
-
-function findColumnDataById$(db, columnId) {
-  const columnsQuery = { _id: new ObjectID(columnId) };
-
-  return new Promise((success, error) => {
-    db.collection('columns').findOne(columnsQuery, (err, result) => {
-      if (err) {
-        error({ error: 'An error has occurred' });
-      } else {
-        success(result);
       }
     });
   });
