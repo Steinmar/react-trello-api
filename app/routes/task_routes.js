@@ -16,7 +16,7 @@ module.exports = function(app, db) {
           status: columnData.name,
           ...data,
           // use this for generating id for object that hasn't get id from mongo
-          _id: new ObjectID(new Date().getDate())
+          _id: new ObjectID(Date.now())
         };
 
         const query = { _id: columnData._id };
@@ -30,9 +30,8 @@ module.exports = function(app, db) {
             if (err) {
               res.send({ error: 'An error has occurred' });
             } else {
-              console.log(result.result.ok);
               if (result.result.ok === 1) {
-                res.send(columnData);
+                res.send({ id: columnData._id, ..._.omit(columnData, '_id') });
               } else {
                 res.setStatus(404).send({});
               }
