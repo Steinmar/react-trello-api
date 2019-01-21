@@ -86,7 +86,7 @@ function parseTaskItemFromDB(item) {
 
 function findColumnNameById$(db, columnId) {
   const columnsQuery = { _id: new ObjectID(columnId) };
-  console.log(columnsQuery);
+
   return new Promise((success, error) => {
     db.collection('columns').findOne(columnsQuery, (err, result) => {
       if (err) {

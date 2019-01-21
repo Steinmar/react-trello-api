@@ -139,6 +139,16 @@ function parseDetailedBoardItemFromDB(board, columns) {
 }
 
 function parseColumnItemFromDB(item) {
-  console.log(item);
-  return { id: item._id, ..._.omit(item, '_id') };
+  return {
+    id: item._id,
+    tasks: item.tasks.map(parseTaskItemFromDB),
+    ..._.omit(item, ['_id', 'tasks'])
+  };
+}
+
+function parseTaskItemFromDB(item) {
+  return {
+    id: item._id,
+    ..._.omit(item, '_id')
+  };
 }
