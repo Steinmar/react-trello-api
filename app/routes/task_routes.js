@@ -1,5 +1,6 @@
 const ObjectID = require('mongodb').ObjectID;
 const _ = require('lodash');
+const utils = require('../utils');
 const PREFIX_URL = '/board/:boardId/column/:columnId/task';
 // const COLLECTION_NAME = 'tasks';
 const COLLECTION_NAME = 'columns';
@@ -31,7 +32,12 @@ module.exports = function(app, db) {
               res.send({ error: 'An error has occurred' });
             } else {
               if (result.result.ok === 1) {
-                res.send({ id: columnData._id, ..._.omit(columnData, '_id') });
+                res.send(
+                  utils.convertItemToFrontend({
+                    ..._.omit(columnData, 'tasks'),
+                    tasks: columnData.tasks.map(utils.convertItemToFrontend)
+                  })
+                );
               } else {
                 res.setStatus(404).send({});
               }

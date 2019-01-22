@@ -13,7 +13,7 @@ module.exports = function(app, db) {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
-        res.send(parseColumnItemFromDB(result.ops[0]));
+        res.send(convertItemFromDBtoFE(result.ops[0]));
       }
     });
   });
@@ -25,7 +25,7 @@ module.exports = function(app, db) {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else if (result) {
-        res.send(parseColumnItemFromDB(result));
+        res.send(convertItemFromDBtoFE(result));
       } else {
         res.sendStatus(404);
       }
@@ -35,7 +35,12 @@ module.exports = function(app, db) {
   app.put(PREFIX_URL + '/:id', (req, res) => {
     const { boardId, id } = req.params;
     const { name, order, tasks } = req.body;
-    const data = { name, order, tasks, boardId };
+    const data = {
+      name,
+      order,
+      tasks: tasks.map(convertItemFromFEtoDB),
+      boardId
+    };
 
     const details = { _id: new ObjectID(id) };
 
@@ -43,9 +48,13 @@ module.exports = function(app, db) {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
+        const convertedResult = {
+          ..._.omit(data, 'tasks'),
+          tasks: data.tasks.map(convertItemFromDBtoFE)
+        };
         res.send({
           id,
-          ...data
+          ...convertedResult
         });
       }
     });
@@ -64,6 +73,10 @@ module.exports = function(app, db) {
   });
 };
 
-function parseColumnItemFromDB(item) {
+function convertItemFromDBtoFE(item) {
   return { id: item._id, ..._.omit(item, '_id') };
+}
+
+function convertItemFromFEtoDB(item) {
+  return { _id: new ObjectID(item._id), ..._.omit(item, 'id') };
 }

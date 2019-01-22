@@ -4,7 +4,8 @@
   "description": "Api for react trello app",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "debug": "nodemon  --inspect server.js"
   },
   "author": "Alex Rybak",
   "license": "MIT",
