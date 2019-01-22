@@ -1,13 +1,13 @@
 const ObjectID = require('mongodb').ObjectID;
 const _ = require('lodash');
-const PREFIX_URL = '/board/:boardId/task';
+const PREFIX_URL = '/board/:boardId/column/:columnId/task';
 // const COLLECTION_NAME = 'tasks';
 const COLLECTION_NAME = 'columns';
 
 module.exports = function(app, db) {
   app.post(PREFIX_URL, (req, res) => {
-    const { boardId } = req.params;
-    const { name, order, columnId, description } = req.body;
+    const { boardId, columnId } = req.params;
+    const { name, order, description } = req.body;
     const data = { name, order, columnId, description, boardId };
 
     findColumnDataById$(db, columnId).then(
@@ -48,17 +48,24 @@ module.exports = function(app, db) {
   });
 
   app.get(PREFIX_URL + '/:id', (req, res) => {
-    const details = { _id: new ObjectID(req.params.id) };
+    const { columnId } = req.params;
 
-    db.collection(COLLECTION_NAME).findOne(details, (err, result) => {
-      if (err) {
-        res.send({ error: 'An error has occurred' });
-      } else if (result) {
-        res.send(parseTaskItemFromDB(result));
-      } else {
-        res.sendStatus(404);
-      }
-    });
+    findColumnDataById$(db, columnId)
+      .then(columnData => {
+        const id = new ObjectID(req.params.id);
+        const foundTask = columnData.tasks.find(task => {
+          return new ObjectID(task._id).equals(id);
+        });
+
+        if (foundTask) {
+          res.send(parseTaskItemFromDB(foundTask));
+        } else {
+          res.status(404).send({ status: 404 });
+        }
+      })
+      .catch(error => {
+        res.send(error);
+      });
   });
 
   app.put(PREFIX_URL + '/:id', (req, res) => {
