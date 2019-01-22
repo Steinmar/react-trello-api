@@ -48,17 +48,20 @@ module.exports = function(app, db) {
   });
 
   app.get(PREFIX_URL + '/:id', (req, res) => {
-    const { columnId } = req.params;
+    const { boardId, columnId } = req.params;
 
-    findColumnDataById$(db, columnId)
-      .then(columnData => {
+    findColumnDataByAndBoardColumnNames$(db, columnId, boardId)
+      .then(foundData => {
+        const columnData = foundData.column;
         const id = new ObjectID(req.params.id);
         const foundTask = columnData.tasks.find(task => {
           return new ObjectID(task._id).equals(id);
         });
-
         if (foundTask) {
-          res.send(parseTaskItemFromDB(foundTask));
+          res.send({
+            task: parseTaskItemFromDB(foundTask),
+            statuses: foundData.statuses
+          });
         } else {
           res.status(404).send({ status: 404 });
         }
@@ -134,5 +137,30 @@ function findColumnDataById$(db, columnId) {
         success(result);
       }
     });
+  });
+}
+
+function findColumnDataByAndBoardColumnNames$(db, columnId, boardId) {
+  const columnsQuery = { _id: new ObjectID(columnId) };
+
+  return new Promise((success, error) => {
+    const boardsQuery = {
+      boardId
+    };
+
+    db.collection('columns')
+      .find(boardsQuery)
+      .toArray((err, result) => {
+        if (err) {
+          error({ error: 'An error has occurred' });
+        } else {
+          success({
+            column: result.find(column =>
+              new ObjectID(column._id).equals(columnsQuery._id)
+            ),
+            statuses: result.map(column => column.name)
+          });
+        }
+      });
   });
 }
