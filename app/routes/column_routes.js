@@ -38,7 +38,9 @@ module.exports = function(app, db) {
     const data = {
       name,
       order,
-      tasks: tasks.map(convertItemFromFEtoDB),
+      tasks: tasks
+        .map(task => ({ ...task, status: name }))
+        .map(convertItemFromFEtoDB),
       boardId
     };
 
