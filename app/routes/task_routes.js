@@ -65,7 +65,7 @@ module.exports = function(app, db) {
         });
         if (foundTask) {
           res.send({
-            task: parseTaskItemFromDB(foundTask),
+            task: utils.convertItemToFrontend(foundTask),
             statuses: foundData.statuses
           });
         } else {
@@ -78,27 +78,38 @@ module.exports = function(app, db) {
   });
 
   app.put(PREFIX_URL + '/:id', (req, res) => {
-    const { boardId } = req.params;
-    const { name, order, columnId, description } = req.body;
-    const data = { name, order, columnId, description, boardId, id };
+    const { boardId, columnId, id } = req.params;
+    const { name, order, description, status } = req.body;
+    const data = { name, order, columnId, description, boardId, id, status };
 
-    findColumnNameById$(db, columnId).then(
-      name => {
-        const task = { status: name, ...data };
-        const details = { _id: new ObjectID(id) };
+    const task = { ...data };
+    // if task changed status we need to remove it from an old column and add to a new
 
-        db.collection(COLLECTION_NAME).update(details, task, (err, result) => {
-          if (err) {
-            res.send({ error: 'An error has occurred' });
-          } else {
-            res.send(parseTaskItemFromDB(result.ops[0]));
+    findColumnDataById$(db, columnId)
+      .then(columnData => {
+        const query = { _id: columnData._id };
+        // columnData.tasks
+        const updatedItemIndex = columnData.tasks.findIndex(element =>
+          element._id.equals(new ObjectID(task.id))
+        );
+        const updatedTasks = _.map(columnData.tasks, _.clone);
+        const newColumnData = _.clone(columnData);
+        updatedTasks[updatedItemIndex] = utils.convertItemToDatabase(task);
+        newColumnData.tasks = updatedTasks;
+
+        db.collection(COLLECTION_NAME).update(
+          query,
+          newColumnData,
+          (err, result) => {
+            if (err) {
+              res.send({ error: 'An error has occurred' });
+            } else {
+              res.send({ task: utils.convertItemToFrontend(task) });
+            }
           }
-        });
-      },
-      error => {
-        res.send({ error: 'An error has occurred' });
-      }
-    );
+        );
+      })
+      .catch(error => res.send({ error: 'An error has occurred' }));
   });
 
   app.delete(PREFIX_URL + '/:id', (req, res) => {
@@ -118,7 +129,7 @@ function parseTaskItemFromDB(item) {
   return { id: item._id, ..._.omit(item, '_id') };
 }
 
-function findColumnNameById$(db, columnId) {
+function findColumnDataById$(db, columnId) {
   const columnsQuery = { _id: new ObjectID(columnId) };
 
   return new Promise((success, error) => {
@@ -126,14 +137,14 @@ function findColumnNameById$(db, columnId) {
       if (err) {
         error({ error: 'An error has occurred' });
       } else {
-        success(result.name);
+        success(result);
       }
     });
   });
 }
 
-function findColumnDataById$(db, columnId) {
-  const columnsQuery = { _id: new ObjectID(columnId) };
+function findColumnDataById(db, id) {
+  const columnsQuery = { _id: new ObjectID(id) };
 
   return new Promise((success, error) => {
     db.collection('columns').findOne(columnsQuery, (err, result) => {
