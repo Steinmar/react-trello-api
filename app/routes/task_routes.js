@@ -87,27 +87,30 @@ module.exports = function(app, db) {
 
     findColumnDataById$(db, columnId)
       .then(columnData => {
-        const query = { _id: columnData._id };
-        // columnData.tasks
-        const updatedItemIndex = columnData.tasks.findIndex(element =>
-          element._id.equals(new ObjectID(task.id))
-        );
-        const updatedTasks = _.map(columnData.tasks, _.clone);
-        const newColumnData = _.clone(columnData);
-        updatedTasks[updatedItemIndex] = utils.convertItemToDatabase(task);
-        newColumnData.tasks = updatedTasks;
+        if (columnData.name === task.status) {
+          const query = { _id: columnData._id };
+          const updatedItemIndex = columnData.tasks.findIndex(element =>
+            element._id.equals(new ObjectID(task.id))
+          );
+          const updatedTasks = _.map(columnData.tasks, _.clone);
+          const newColumnData = _.clone(columnData);
+          updatedTasks[updatedItemIndex] = utils.convertItemToDatabase(task);
+          newColumnData.tasks = updatedTasks;
 
-        db.collection(COLLECTION_NAME).update(
-          query,
-          newColumnData,
-          (err, result) => {
-            if (err) {
-              res.send({ error: 'An error has occurred' });
-            } else {
-              res.send({ task: utils.convertItemToFrontend(task) });
+          db.collection(COLLECTION_NAME).update(
+            query,
+            newColumnData,
+            (err, result) => {
+              if (err) {
+                res.send({ error: 'An error has occurred' });
+              } else {
+                res.send({ task: utils.convertItemToFrontend(task) });
+              }
             }
-          }
-        );
+          );
+        } else {
+          // move task to another column
+        }
       })
       .catch(error => res.send({ error: 'An error has occurred' }));
   });
@@ -125,26 +128,8 @@ module.exports = function(app, db) {
   });
 };
 
-function parseTaskItemFromDB(item) {
-  return { id: item._id, ..._.omit(item, '_id') };
-}
-
 function findColumnDataById$(db, columnId) {
   const columnsQuery = { _id: new ObjectID(columnId) };
-
-  return new Promise((success, error) => {
-    db.collection('columns').findOne(columnsQuery, (err, result) => {
-      if (err) {
-        error({ error: 'An error has occurred' });
-      } else {
-        success(result);
-      }
-    });
-  });
-}
-
-function findColumnDataById(db, id) {
-  const columnsQuery = { _id: new ObjectID(id) };
 
   return new Promise((success, error) => {
     db.collection('columns').findOne(columnsQuery, (err, result) => {
