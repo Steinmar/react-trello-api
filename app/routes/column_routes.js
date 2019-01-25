@@ -69,7 +69,7 @@ module.exports = function(app, db) {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
-        res.sendStatus(201);
+        res.send({ columnId: req.params.id });
       }
     });
   });
