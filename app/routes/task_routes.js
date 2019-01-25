@@ -56,7 +56,7 @@ module.exports = function(app, db) {
   app.get(PREFIX_URL + '/:id', (req, res) => {
     const { boardId, columnId } = req.params;
 
-    findColumnDataByAndBoardColumnNames$(db, columnId, boardId)
+    findColumnDataByBoardAndColumnIds$(db, columnId, boardId)
       .then(foundData => {
         const columnData = foundData.column;
         const id = new ObjectID(req.params.id);
@@ -77,39 +77,95 @@ module.exports = function(app, db) {
       });
   });
 
+  // this things should be refactored in future.
+  // don't have time to do it now
   app.put(PREFIX_URL + '/:id', (req, res) => {
     const { boardId, columnId, id } = req.params;
     const { name, order, description, status } = req.body;
     const data = { name, order, columnId, description, boardId, id, status };
 
     const task = { ...data };
-    // if task changed status we need to remove it from an old column and add to a new
 
-    findColumnDataById$(db, columnId)
-      .then(columnData => {
-        if (columnData.name === task.status) {
-          const query = { _id: columnData._id };
-          const updatedItemIndex = columnData.tasks.findIndex(element =>
+    findColumnsDataByIdAndName$(db, columnId, task.status)
+      .then(data => {
+        const oldColumn = data.byId;
+        const newColumn = data.byName;
+
+        if (oldColumn.name === newColumn.name) {
+          const query = { _id: oldColumn._id };
+          const updatedItemIndex = oldColumn.tasks.findIndex(element =>
             element._id.equals(new ObjectID(task.id))
           );
-          const updatedTasks = _.map(columnData.tasks, _.clone);
-          const newColumnData = _.clone(columnData);
+          const updatedTasks = _.map(oldColumn.tasks, _.cloneDeep);
+          const newColumnData = _.cloneDeep(oldColumn);
           updatedTasks[updatedItemIndex] = utils.convertItemToDatabase(task);
           newColumnData.tasks = updatedTasks;
 
-          db.collection(COLLECTION_NAME).update(
-            query,
-            newColumnData,
-            (err, result) => {
-              if (err) {
-                res.send({ error: 'An error has occurred' });
-              } else {
-                res.send({ task: utils.convertItemToFrontend(task) });
-              }
-            }
-          );
+          updateColumn$(db, query, newColumnData)
+            .then(_ => {
+              res.send({ task: utils.convertItemToFrontend(task) });
+            })
+            .catch(err => res.status(500).send(err));
         } else {
           // move task to another column
+          const queryOldColumn = { _id: { $eq: oldColumn._id } };
+          const queryNewColumn = { _id: { $eq: newColumn._id } };
+
+          const updatedTaskCurrentIndex = oldColumn.tasks.findIndex(element =>
+            element._id.equals(new ObjectID(task.id))
+          );
+          const oldColumnTasks = _.map(oldColumn.tasks, _.cloneDeep);
+          const modifiedOldColumnData = _.cloneDeep(oldColumn);
+          const movingTask = _.cloneDeep(
+            oldColumnTasks[updatedTaskCurrentIndex]
+          );
+          const modifiedNewColumnData = _.cloneDeep(newColumn);
+
+          oldColumnTasks.splice(updatedTaskCurrentIndex, 1);
+          modifiedOldColumnData.tasks = oldColumnTasks.map((task, index) => ({
+            ...task,
+            order: index
+          }));
+          modifiedNewColumnData.tasks.push({
+            ...movingTask,
+            order: modifiedNewColumnData.tasks.length
+          });
+
+          const updateOldColumn$ = updateColumn$(
+            db,
+            queryOldColumn,
+            modifiedOldColumnData
+          );
+          const updateNewColumn$ = updateColumn$(
+            db,
+            queryNewColumn,
+            modifiedNewColumnData
+          );
+
+          Promise.all([updateOldColumn$, updateNewColumn$])
+            .then(result => {
+              const operationResult = result.reduce(
+                (curr, prev) => {
+                  return {
+                    nModified: prev.nModified + curr.nModified,
+                    ok: prev.ok + curr.ok
+                  };
+                },
+                {
+                  nModified: 0,
+                  ok: 0
+                }
+              );
+              return (
+                operationResult.nModified === 2 && operationResult.ok === 2
+              );
+            })
+            .then(wasSuccess => {
+              if (wasSuccess) {
+                res.send({ task: utils.convertItemToFrontend(task) });
+              }
+            })
+            .catch(err => res.status(500).send(err));
         }
       })
       .catch(error => res.send({ error: 'An error has occurred' }));
@@ -142,7 +198,28 @@ function findColumnDataById$(db, columnId) {
   });
 }
 
-function findColumnDataByAndBoardColumnNames$(db, columnId, boardId) {
+function findColumnsDataByIdAndName$(db, column1Id, column2Name) {
+  const column1ObjectID = new ObjectID(column1Id);
+  const columnsQuery = {
+    $or: [{ _id: { $eq: column1ObjectID } }, { name: { $eq: column2Name } }]
+  };
+
+  return new Promise((success, error) => {
+    db.collection('columns')
+      .find(columnsQuery)
+      .toArray((err, result) => {
+        if (err) {
+          error({ error: 'An error has occurred' });
+        } else {
+          success({
+            byId: result.find(column => column._id.equals(column1ObjectID)),
+            byName: result.find(column => column.name === column2Name)
+          });
+        }
+      });
+  });
+}
+function findColumnDataByBoardAndColumnIds$(db, columnId, boardId) {
   const columnsQuery = { _id: new ObjectID(columnId) };
 
   return new Promise((success, error) => {
@@ -164,5 +241,17 @@ function findColumnDataByAndBoardColumnNames$(db, columnId, boardId) {
           });
         }
       });
+  });
+}
+
+function updateColumn$(db, query, columnData) {
+  return new Promise((resolve, reject) => {
+    db.collection(COLLECTION_NAME).update(query, columnData, (err, result) => {
+      if (err) {
+        reject({ error: 'An error has occurred' });
+      } else {
+        resolve(result.result);
+      }
+    });
   });
 }
