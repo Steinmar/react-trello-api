@@ -129,7 +129,7 @@ module.exports = function(app, db) {
           modifiedNewColumnData.tasks.push({
             ...movingTask,
             order: modifiedNewColumnData.tasks.length,
-            columnId: modifiedNewColumnData._id,
+            columnId: newColumn._id,
             status: modifiedNewColumnData.name
           });
 
