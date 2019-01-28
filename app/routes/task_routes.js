@@ -128,7 +128,9 @@ module.exports = function(app, db) {
           }));
           modifiedNewColumnData.tasks.push({
             ...movingTask,
-            order: modifiedNewColumnData.tasks.length
+            order: modifiedNewColumnData.tasks.length,
+            columnId: modifiedNewColumnData._id,
+            status: modifiedNewColumnData.name
           });
 
           const updateOldColumn$ = updateColumn$(

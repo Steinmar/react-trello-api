@@ -117,7 +117,18 @@ module.exports = function(app, db) {
       if (err) {
         res.send({ error: 'An error has occurred' });
       } else {
-        res.send({ id: query._id });
+        db.collection('columns').remove(
+          { boardId: req.params.id },
+          (err, result) => {
+            if (err) {
+              res.send({ error: 'An error has occurred' });
+            } else {
+              res.send({ id: query._id });
+            }
+          }
+        );
+
+        // res.send({ id: query._id });
       }
     });
   });
