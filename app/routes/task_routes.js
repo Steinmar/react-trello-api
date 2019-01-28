@@ -73,7 +73,7 @@ module.exports = function(app, db) {
         }
       })
       .catch(error => {
-        res.send(error);
+        error => res.status(500).send(error);
       });
   });
 
@@ -170,19 +170,31 @@ module.exports = function(app, db) {
             .catch(err => res.status(500).send(err));
         }
       })
-      .catch(error => res.send({ error: 'An error has occurred' }));
+      .catch(error => res.status(500).send({ error: 'An error has occurred' }));
   });
 
   app.delete(PREFIX_URL + '/:id', (req, res) => {
+    const { boardId, columnId, id } = req.params;
     const details = { _id: new ObjectID(req.params.id) };
+    const taskId = new ObjectID(id);
 
-    db.collection(COLLECTION_NAME).remove(details, (err, result) => {
-      if (err) {
-        res.send({ error: 'An error has occurred' });
-      } else {
-        res.sendStatus(201);
-      }
-    });
+    findColumnDataById$(db, columnId)
+      .then(data => {
+        const columnData = _.cloneDeep(data);
+        const indexToRemove = data.tasks.findIndex(task =>
+          task._id.equals(taskId)
+        );
+        columnData.tasks.splice(indexToRemove, 1);
+        return updateColumn$(db, { _id: { $eq: columnData._id } }, columnData);
+      })
+      .then(data => {
+        if (data.ok === 1 && data.nModified === 1) {
+          res.send({ boardId, columnId, id });
+        } else {
+          res.status(500).send({ error: 'An error has occurred' });
+        }
+      })
+      .catch(error => res.status(500).send({ error: 'An error has occurred' }));
   });
 };
 
